@@ -2,8 +2,15 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { db } = require("../database/firebase");
 
+function normalizeEmail(email) {
+  return String(email || "")
+    .trim()
+    .toLowerCase();
+}
+
 async function login({ email, password }) {
-  const snapshot = await db.collection("users").where("email", "==", email).limit(1).get();
+  const emailNorm = normalizeEmail(email);
+  const snapshot = await db.collection("users").where("email", "==", emailNorm).limit(1).get();
 
   if (snapshot.empty) {
     const error = new Error("E-mail ou senha invalidos.");
@@ -18,6 +25,12 @@ async function login({ email, password }) {
   if (!passwordMatches) {
     const error = new Error("E-mail ou senha invalidos.");
     error.statusCode = 401;
+    throw error;
+  }
+
+  if (!process.env.JWT_SECRET) {
+    const error = new Error("JWT_SECRET nao configurado no servidor.");
+    error.statusCode = 500;
     throw error;
   }
 

@@ -193,7 +193,7 @@ export default function SaleForm() {
     <>
       <PageHeader
         title="Registrar venda"
-        description="Monte o carrinho com varios produtos. Desconto e pagamento aplicam ao total."
+        description="PDV: precos ficam congelados no carrinho no momento da venda. Estoque e validado antes de finalizar; cliente opcional amarra ao historico."
       />
 
       <form className="card grid gap-4 lg:grid-cols-2" onSubmit={handleSubmit}>
@@ -349,6 +349,9 @@ export default function SaleForm() {
             value={checkout.discount}
             onChange={(event) => updateCheckout("discount", event.target.value)}
           />
+          <span className="mt-1 block text-xs text-slate-500">
+            Valor fixo em reais retirado do subtotal do carrinho; confira limites em Configuracoes.
+          </span>
         </label>
 
         <label>
@@ -363,15 +366,21 @@ export default function SaleForm() {
             <option value="DEBITO">Debito</option>
             <option value="CREDITO">Credito</option>
           </select>
+          <span className="mt-1 block text-xs text-slate-500">Em dinheiro, informe o valor recebido para exibir o troco.</span>
         </label>
 
-        <label className="flex items-center gap-3 rounded-2xl bg-pink-50 p-4">
-          <input
-            type="checkbox"
-            checked={checkout.isInstallment}
-            onChange={(event) => updateCheckout("isInstallment", event.target.checked)}
-          />
-          <span className="text-sm font-semibold">Venda parcelada</span>
+        <label className="flex flex-col gap-2 rounded-2xl bg-pink-50 p-4">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={checkout.isInstallment}
+              onChange={(event) => updateCheckout("isInstallment", event.target.checked)}
+            />
+            <span className="text-sm font-semibold">Venda parcelada</span>
+          </div>
+          <span className="text-xs text-slate-500 pl-7 sm:pl-0">
+            Marque para registrar quantas parcelas; o valor por parcela aparece no resumo.
+          </span>
         </label>
 
         <label>
@@ -384,6 +393,7 @@ export default function SaleForm() {
             value={checkout.installments}
             onChange={(event) => updateCheckout("installments", event.target.value)}
           />
+          <span className="mt-1 block text-xs text-slate-500">Ativo apenas com parcelamento marcado.</span>
         </label>
 
         {checkout.paymentMethod === "DINHEIRO" && (
@@ -407,6 +417,7 @@ export default function SaleForm() {
             value={checkout.observation}
             onChange={(event) => updateCheckout("observation", event.target.value)}
           />
+          <span className="mt-1 block text-xs text-slate-500">Nota interna (troca combinada, combinado com cliente, etc.).</span>
         </label>
 
         <div className="grid gap-3 rounded-3xl bg-maricota-rose p-5 lg:col-span-2 sm:grid-cols-2 lg:grid-cols-5">
@@ -417,9 +428,14 @@ export default function SaleForm() {
           <Summary label="Troco" value={formatCurrency(Math.max(change, 0))} />
         </div>
 
-        <button className="btn-primary lg:col-span-2" disabled={cart.length === 0} type="submit">
-          Finalizar venda
-        </button>
+        <div className="lg:col-span-2">
+          <button className="btn-primary w-full sm:w-auto" disabled={cart.length === 0} type="submit">
+            Finalizar venda
+          </button>
+          <p className="mt-2 text-xs text-slate-500">
+            Ao confirmar, o estoque baixa e a venda entra no historico e nos relatorios.
+          </p>
+        </div>
       </form>
     </>
   );

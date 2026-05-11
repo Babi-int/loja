@@ -11,11 +11,43 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || "*" }));
+/** Uma origem ou varias separadas por virgula (ex.: localhost + IP na rede para o mesmo front). */
+function resolveCorsOrigin() {
+  const raw = process.env.FRONTEND_URL;
+  if (!raw || raw === "*") return true;
+  const list = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  if (list.length === 0) return true;
+  if (list.length === 1) return list[0];
+  return list;
+}
+
+app.use(cors({ origin: resolveCorsOrigin() }));
 app.use(express.json());
 app.use(morgan("dev"));
 
+/** Health na raiz: alguns paineis (Render) configuram path /health sem /api. */
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", app: "Maricota Kids API" });
+});
+
+app.get("/", (req, res) => {
+  res.json({
+    app: "Maricota Kids API",
+    health: "/api/health",
+    healthAlt: "/health",
+    login: "POST /api/auth/login"
+  });
+});
+
 app.use("/api", routes);
+
+app.use((req, res) => {
+  res.status(404).json({
+    message: "Not Found",
+    hint: "Rotas da API usam o prefixo /api (ex.: GET /api/health)."
+  });
+});
+
 app.use(errorMiddleware);
 
 module.exports = app;

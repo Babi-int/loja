@@ -1,0 +1,13 @@
+# Blueprint de referencia para Render (https://render.com/docs/blueprint-spec)
+# "New Blueprint" no Render apontando para este repositorio, ou crie Web Service manualmente com os mesmos campos.
+
+services:
+  - type: web
+    name: maricota-kids-backend
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health

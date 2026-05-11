@@ -42,7 +42,32 @@ copy .env.example .env
 npm run dev
 ```
 
-O frontend abre em `http://localhost:5173` e a API roda em `http://localhost:3333/api`.
+O frontend abre em `http://localhost:5173` e a API roda em `http://localhost:3333/api`. O comando `npm run dev` do frontend usa `--host` para o painel tambem ser acessivel pelo IP da maquina na rede local.
+
+### Outro computador na mesma rede (Wi-Fi / LAN)
+
+1. Descubra o **IP** do PC que roda backend e frontend (ex.: `ipconfig` no Windows → IPv4, algo como `192.168.0.15`).
+2. No **backend** `.env`, defina `FRONTEND_URL` com **todas** as origens que o navegador pode usar, **separadas por virgula** (CORS), por exemplo:
+   - `FRONTEND_URL=http://localhost:5173,http://192.168.0.15:5173`
+3. No **frontend** `.env` da maquina que roda o `npm run dev`, aponte a API pelo **IP visivel na rede** (assim o JavaScript em qualquer PC usa a URL certa):
+   - `VITE_API_URL=http://192.168.0.15:3333/api`
+   Voce ainda pode abrir o painel em `http://localhost:5173` neste PC; chamadas a API seguem para esse IP e funcionam na propria maquina.
+4. **Firewall do Windows**: permita entrada nas portas **3333** (API) e **5173** (Vite), ou a porta que o Vite mostrar no terminal.
+5. Na outra maquina, abra `http://192.168.0.15:5173` (troque pelo seu IP). Crie usuarios em **Configuracoes** e compartilhe e-mail e senha.
+
+A API ja escuta em `0.0.0.0` por padrao (`HOST` no `.env` do backend; use `127.0.0.1` apenas se quiser bloquear acesso pela rede).
+
+### Site no Netlify (frontend) + API na internet
+
+Exemplo de frontend: `https://loja-maricota-32c1db.netlify.app`
+
+1. **Hospede o backend** em algum servico com HTTPS (Render, Railway, Fly.io, etc.) e obtenha a URL publica da API (ex.: `https://maricota-api.onrender.com`).
+2. **Netlify** → seu site → **Site configuration** → **Environment variables**: adicione `VITE_API_URL` = `https://SUA-API-DOMINIO.com/api` (obrigatorio terminar em `/api`).
+3. Faca **Deploys** → **Trigger deploy** → **Clear cache and deploy site** (variaveis `VITE_*` entram no build).
+4. No `.env` (ou painel) do **backend**: `FRONTEND_URL=https://loja-maricota-32c1db.netlify.app` (sem `/` no final). Se precisar de mais de uma origem, separe por virgula.
+5. Firebase e demais variaveis do backend devem estar configurados no host da API.
+
+Se `VITE_API_URL` nao existir no build do Netlify, o app tenta `localhost:3333` e o login falha para todo mundo que acessa pelo link publico.
 
 ## Hospedagem sugerida
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import api from "../api/client";
 import PageHeader from "../components/PageHeader";
+import RequiredFieldLabel from "../components/RequiredFieldLabel";
 import { useAuth } from "../context/AuthContext";
 
 const initialForm = {
@@ -146,7 +147,9 @@ export default function Settings() {
             )}
 
             <label>
-              <span className="mb-2 block text-sm font-semibold">Nome da loja</span>
+              <RequiredFieldLabel tip="Nome da sua loja como voce quer que apareca no sistema e em impressoes futuras. Ex.: Maricota Kids.">
+                Nome da loja
+              </RequiredFieldLabel>
               <input
                 className="input"
                 required
@@ -189,13 +192,20 @@ export default function Settings() {
               </span>
             </label>
 
-            <label className="flex items-center gap-3 rounded-2xl bg-pink-50 p-4 lg:col-span-2">
-              <input
-                type="checkbox"
-                checked={form.disallowSaleBelowCost}
-                onChange={(e) => updateField("disallowSaleBelowCost", e.target.checked)}
-              />
-              <span className="text-sm font-semibold">Nao permitir venda abaixo do custo de compra</span>
+            <label className="flex flex-col gap-2 rounded-2xl bg-pink-50 p-4 lg:col-span-2 sm:flex-row sm:items-start sm:gap-3">
+              <div className="flex items-start gap-3">
+                <input
+                  className="mt-1"
+                  type="checkbox"
+                  checked={form.disallowSaleBelowCost}
+                  onChange={(e) => updateField("disallowSaleBelowCost", e.target.checked)}
+                />
+                <span className="text-sm font-semibold">Nao permitir venda abaixo do custo de compra</span>
+              </div>
+              <span className="text-xs text-slate-600 sm:ml-7">
+                Quando ativo, o PDV bloqueia precos unitarios que ficariam abaixo do valor de compra cadastrado (apos
+                descontos).
+              </span>
             </label>
 
             <label>
@@ -236,7 +246,9 @@ export default function Settings() {
 
                 <form className="grid gap-3" onSubmit={handleCreateUser}>
                   <label>
-                    <span className="mb-2 block text-sm font-semibold">Nome</span>
+                    <RequiredFieldLabel tip="Nome da pessoa que vai usar o sistema facil de reconhecer na lista de usuarios.">
+                      Nome
+                    </RequiredFieldLabel>
                     <input
                       className="input"
                       required
@@ -245,7 +257,9 @@ export default function Settings() {
                     />
                   </label>
                   <label>
-                    <span className="mb-2 block text-sm font-semibold">E-mail (login)</span>
+                    <RequiredFieldLabel tip="Sera o login: a pessoa digita esse e-mail na tela Entrar. Tem que ser unico no sistema.">
+                      E-mail (login)
+                    </RequiredFieldLabel>
                     <input
                       className="input"
                       autoComplete="off"
@@ -256,7 +270,9 @@ export default function Settings() {
                     />
                   </label>
                   <label>
-                    <span className="mb-2 block text-sm font-semibold">Senha inicial (min. 6 caracteres)</span>
+                    <RequiredFieldLabel tip="Senha provisoria (no minimo 6 caracteres). A pessoa pode trocar depois se voce implementar essa tela; por ora e a senha inicial.">
+                      Senha inicial (min. 6 caracteres)
+                    </RequiredFieldLabel>
                     <input
                       className="input"
                       autoComplete="new-password"

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/client";
 import PageHeader from "../components/PageHeader";
+import RequiredFieldLabel from "../components/RequiredFieldLabel";
 import { calculateSalePrice, formatCurrency } from "../utils/formatters";
 
 const initialForm = {
@@ -65,23 +66,32 @@ export default function ProductForm() {
 
   return (
     <>
-      <PageHeader title={id ? "Editar produto" : "Novo produto"} description="Campos obrigatorios com calculo automatico do valor de venda." />
+      <PageHeader
+        title={id ? "Editar produto" : "Novo produto"}
+        description="Defina compra, margem e estoque. O preco de venda e calculado no servidor ao salvar; a caixa rosa mostra apenas uma previa. Apenas produtos ativos aparecem no PDV."
+      />
 
       <form className="card grid gap-4 lg:grid-cols-2" onSubmit={handleSubmit}>
         {message && <div className="rounded-2xl bg-green-50 px-4 py-3 text-sm text-green-700 lg:col-span-2">{message}</div>}
 
         <label>
-          <span className="mb-2 block text-sm font-semibold">Nome do produto *</span>
+          <RequiredFieldLabel tip="Nome que aparece na lista, no PDV e no cupom. Use algo claro, ex.: Vestido floral P.">
+            Nome do produto
+          </RequiredFieldLabel>
           <input className="input" required value={form.name} onChange={(event) => updateField("name", event.target.value)} />
         </label>
 
         <label>
-          <span className="mb-2 block text-sm font-semibold">Tipo de roupa *</span>
+          <RequiredFieldLabel tip="Que tipo de peca e: calca, vestido, conjunto, etc. Ajuda na busca e na organizacao.">
+            Tipo de roupa
+          </RequiredFieldLabel>
           <input className="input" required value={form.clothingType} onChange={(event) => updateField("clothingType", event.target.value)} />
         </label>
 
         <label>
-          <span className="mb-2 block text-sm font-semibold">Categoria *</span>
+          <RequiredFieldLabel tip="Publico do produto (menino, menina, adulto...). Assim voce filtra e relatorios ficam coerentes.">
+            Categoria
+          </RequiredFieldLabel>
           <select className="input" required value={form.category} onChange={(event) => updateField("category", event.target.value)}>
             <option value="MENINO">Menino</option>
             <option value="MENINA">Menina</option>
@@ -92,7 +102,9 @@ export default function ProductForm() {
         </label>
 
         <label>
-          <span className="mb-2 block text-sm font-semibold">Tamanho *</span>
+          <RequiredFieldLabel tip="Numeracao ou letra do tamanho (P, M, 4, 6...). Cada variacao vira um SKU separado.">
+            Tamanho
+          </RequiredFieldLabel>
           <input className="input" required value={form.size} onChange={(event) => updateField("size", event.target.value)} />
         </label>
 
@@ -113,32 +125,47 @@ export default function ProductForm() {
         </label>
 
         <label>
-          <span className="mb-2 block text-sm font-semibold">Quantidade em estoque *</span>
+          <RequiredFieldLabel tip="Quantas unidades existem agora na loja. Use zero se ainda nao chegou mercadoria. Vendas e ajustes mudam esse numero depois.">
+            Quantidade em estoque
+          </RequiredFieldLabel>
           <input className="input" required min="0" type="number" value={form.stockQuantity} onChange={(event) => updateField("stockQuantity", event.target.value)} />
+          <span className="mt-1 block text-xs text-slate-500">
+            Alteracoes por vendas e ajustes na lista de produtos entram automaticamente no total.
+          </span>
         </label>
 
         <label>
-          <span className="mb-2 block text-sm font-semibold">Valor de compra *</span>
+          <RequiredFieldLabel tip="Quanto voce pagou por uma unidade no fornecedor. Base para lucro estimado e para bloquear venda muito barata, se a loja configurar.">
+            Valor de compra
+          </RequiredFieldLabel>
           <input className="input" required min="0" step="0.01" type="number" value={form.purchasePrice} onChange={(event) => updateField("purchasePrice", event.target.value)} />
+          <span className="mt-1 block text-xs text-slate-500">Custo unitario pago ao fornecedor; usado no lucro estimado e nas regras de preco minimo.</span>
         </label>
 
         <label>
-          <span className="mb-2 block text-sm font-semibold">Lucro (%) *</span>
+          <RequiredFieldLabel tip="Margem em cima do custo. Ex.: 40 significa que o preco de venda considera 40% sobre o que voce pagou (regra tambem aplicada no servidor).">
+            Lucro (%)
+          </RequiredFieldLabel>
           <input className="input" required min="0" step="0.01" type="number" value={form.profitPercentage} onChange={(event) => updateField("profitPercentage", event.target.value)} />
+          <span className="mt-1 block text-xs text-slate-500">Margem sobre o custo; ex.: 40% aplica markup sobre a compra.</span>
         </label>
 
         <label>
-          <span className="mb-2 block text-sm font-semibold">Status *</span>
-          <select className="input" value={form.status} onChange={(event) => updateField("status", event.target.value)}>
+          <RequiredFieldLabel tip="Ativo entra no PDV. Inativo ou esgotado esconde da venda. Escolha o que combina com a situacao real da peca.">
+            Status
+          </RequiredFieldLabel>
+          <select className="input" required value={form.status} onChange={(event) => updateField("status", event.target.value)}>
             <option value="ATIVO">Ativo</option>
             <option value="INATIVO">Inativo</option>
             <option value="ESGOTADO">Esgotado</option>
           </select>
+          <span className="mt-1 block text-xs text-slate-500">Inativo ou esgotado some do PDV; o dashboard pode contar esgotados pelo estoque ou pelo status.</span>
         </label>
 
         <div className="rounded-3xl bg-maricota-rose p-5">
           <span className="text-sm font-semibold text-slate-500">Valor de venda calculado</span>
           <strong className="mt-2 block text-3xl text-maricota-text">{formatCurrency(salePrice)}</strong>
+          <p className="mt-2 text-xs text-slate-500">Previa local; o valor gravado segue a mesma regra no backend.</p>
         </div>
 
         <div className="flex gap-3 lg:col-span-2">

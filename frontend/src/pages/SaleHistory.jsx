@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import api from "../api/client";
 import DataTable from "../components/DataTable";
 import PageHeader from "../components/PageHeader";
+import RequiredFieldLabel from "../components/RequiredFieldLabel";
 import { formatCurrency, formatDate } from "../utils/formatters";
 
 function returnedQtyForProduct(sale, productId) {
@@ -93,7 +94,7 @@ export default function SaleHistory() {
     <>
       <PageHeader
         title="Historico de vendas"
-        description="Consulte vendas, cancele com estorno de estoque ou registre devolucoes parciais."
+        description="Auditoria completa. Cancelar reverte itens ainda nao devolvidos; devolucao parcial ajusta estoque item a item com motivo obrigatorio."
       />
 
       {message && (
@@ -188,9 +189,12 @@ export default function SaleHistory() {
             <p className="mt-2 text-sm text-slate-600">Informe as quantidades devolvidas por item e o motivo.</p>
 
             <label className="mt-4 block">
-              <span className="mb-2 block text-sm font-semibold">Motivo</span>
+              <RequiredFieldLabel tip="Obrigatorio: descreva o motivo da devolucao (defeito, arrependimento, tamanho errado...). Ajuda a loja e o historico a ficarem claros.">
+                Motivo
+              </RequiredFieldLabel>
               <textarea
                 className="input min-h-24"
+                required
                 value={returnReason}
                 onChange={(e) => setReturnReason(e.target.value)}
               />

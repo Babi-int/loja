@@ -8,7 +8,15 @@ function authMiddleware(req, res, next) {
     return res.status(401).json({ message: "Token nao informado." });
   }
 
-  const [, token] = authHeader.split(" ");
+  const parts = authHeader.split(" ");
+  const token = parts.length >= 2 ? parts[1] : null;
+  if (!token) {
+    return res.status(401).json({ message: "Token nao informado." });
+  }
+
+  if (!process.env.JWT_SECRET) {
+    return res.status(500).json({ message: "Servidor sem JWT_SECRET configurado." });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

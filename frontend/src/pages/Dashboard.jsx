@@ -10,6 +10,7 @@ import {
   IconSales,
   IconSoldOut
 } from "../components/icons/DashboardStatIcons";
+import DashboardSalesCharts from "../components/DashboardSalesCharts";
 import { formatCurrency, formatDate } from "../utils/formatters";
 
 /** Formato AAAA-MM-DD para querystring; backend interpreta no fuso local do servidor. */
@@ -65,7 +66,8 @@ export default function Dashboard() {
       title: "Produtos cadastrados",
       value: summary?.productsCount ?? 0,
       tone: "pink",
-      icon: <IconProducts />
+      icon: <IconProducts />,
+      hint: "Total de itens no catalogo (inclui ativos e inativos)."
     },
     {
       title: "Estoque baixo",
@@ -78,7 +80,8 @@ export default function Dashboard() {
       title: "Produtos esgotados",
       value: summary?.soldOutCount ?? 0,
       tone: "blue",
-      icon: <IconSoldOut />
+      icon: <IconSoldOut />,
+      hint: "Estoque zero ou marcados como esgotados no cadastro."
     },
     {
       title: "Vendas no periodo",
@@ -93,13 +96,15 @@ export default function Dashboard() {
       title: "Receita no periodo",
       value: formatCurrency(summary?.periodRevenue),
       tone: "pink",
-      icon: <IconRevenue />
+      icon: <IconRevenue />,
+      hint: "Soma dos totais das vendas validas no intervalo abaixo."
     },
     {
       title: "Lucro estimado (periodo)",
       value: formatCurrency(summary?.periodEstimatedProfit),
       tone: "mint",
-      icon: <IconProfit />
+      icon: <IconProfit />,
+      hint: "Aproximacao: diferenca entre venda e custo de compra dos itens."
     }
   ];
 
@@ -107,7 +112,7 @@ export default function Dashboard() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Filtre por periodo para ver vendas, receita e lucro. Estoque reflete o cadastro atual."
+        description="Visao rapida do negocio. O intervalo de datas afeta apenas vendas, receita e lucro; contagens de estoque sao sempre do cadastro atual. Use Mes atual para alinhar ao relatorio financeiro. Os graficos abaixo usam sempre os ultimos 30 dias e 12 meses (vendas validas; devolucoes descontam)."
       />
 
       <div className="card mb-6 grid gap-4 md:grid-cols-4 md:items-end">
@@ -129,20 +134,25 @@ export default function Dashboard() {
             onChange={(e) => setRange((r) => ({ ...r, endDate: e.target.value }))}
           />
         </label>
-        <div className="flex flex-wrap gap-2 md:col-span-2">
-          <button className="btn-primary" type="button" disabled={loading} onClick={load}>
-            {loading ? "Carregando..." : "Atualizar"}
-          </button>
-          <button
-            className="btn-secondary"
-            type="button"
-            disabled={loading}
-            onClick={() => {
-              setRange(defaultDateRange());
-            }}
-          >
-            Mes atual
-          </button>
+        <div className="md:col-span-2">
+          <p className="mb-2 text-xs text-slate-500">
+            As datas usam o calendario; o servidor interpreta o fim do intervalo no horario da API.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-primary" type="button" disabled={loading} onClick={load}>
+              {loading ? "Carregando..." : "Atualizar"}
+            </button>
+            <button
+              className="btn-secondary"
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setRange(defaultDateRange());
+              }}
+            >
+              Mes atual
+            </button>
+          </div>
         </div>
       </div>
 
@@ -156,6 +166,10 @@ export default function Dashboard() {
         ))}
       </section>
 
+      {summary && !loading && (
+        <DashboardSalesCharts daily={summary.dailySalesChart} monthly={summary.monthlySalesChart} />
+      )}
+
       {summary?.periodDiscounts > 0 && (
         <p className="mt-4 text-sm text-slate-600">
           Descontos concedidos no periodo:{" "}
@@ -164,7 +178,7 @@ export default function Dashboard() {
       )}
 
       <section className="mt-8">
-        <h2 className="mb-4 text-lg font-bold text-maricota-text">
+        <h2 className="text-lg font-bold text-maricota-text">
           Vendas no periodo
           {summary?.filter && (
             <span className="ml-2 text-sm font-normal text-slate-500">
@@ -172,6 +186,9 @@ export default function Dashboard() {
             </span>
           )}
         </h2>
+        <p className="mb-4 mt-1 text-sm text-slate-500">
+          Ultimas ate 20 vendas do intervalo; cancele ou devolva itens pelo menu Historico de vendas.
+        </p>
         {!summary?.recentSales?.length ? (
           <p className="rounded-2xl border border-pink-100 bg-pink-50/50 px-4 py-6 text-center text-sm text-slate-500">
             Nenhuma venda neste periodo.

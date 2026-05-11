@@ -40,6 +40,7 @@ export default function CustomerList() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <p className="mt-2 text-xs text-slate-500">Busca instantanea na lista ja carregada; nao altera o cadastro.</p>
       </div>
 
       <DataTable

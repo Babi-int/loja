@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/client";
 import PageHeader from "../components/PageHeader";
+import RequiredFieldLabel from "../components/RequiredFieldLabel";
 
 const initial = {
   name: "",
@@ -69,7 +70,9 @@ export default function CustomerForm() {
           <legend className="px-2 text-sm font-bold text-maricota-text">Responsavel (mae)</legend>
 
           <label>
-            <span className="mb-2 block text-sm font-semibold">Nome *</span>
+            <RequiredFieldLabel tip="Identifica a responsavel (mae ou quem compra). Precisamos do nome para achar esse cadastro nas buscas e na hora da venda.">
+              Nome
+            </RequiredFieldLabel>
             <input
               className="input"
               required

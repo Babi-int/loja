@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api/client";
 import DataTable from "../components/DataTable";
 import PageHeader from "../components/PageHeader";
+import RequiredFieldLabel from "../components/RequiredFieldLabel";
 import { formatCurrency } from "../utils/formatters";
 
 export default function ProductList() {
@@ -60,7 +61,7 @@ export default function ProductList() {
     <>
       <PageHeader
         title="Produtos"
-        description="Cadastre roupas, tamanhos, marcas, precos e acompanhe o estoque."
+        description="Catalogo da loja: busque, filtre por status e ajuste estoque manualmente quando precisar corrigir divergencias (com motivo obrigatorio)."
         action={
           <Link className="btn-primary" to="/produtos/novo">
             Novo produto
@@ -75,12 +76,15 @@ export default function ProductList() {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
-        <select className="input" value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option value="">Todos os status</option>
-          <option value="ATIVO">Ativo</option>
-          <option value="INATIVO">Inativo</option>
-          <option value="ESGOTADO">Esgotado</option>
-        </select>
+        <div>
+          <select className="input w-full" value={status} onChange={(event) => setStatus(event.target.value)}>
+            <option value="">Todos os status</option>
+            <option value="ATIVO">Ativo</option>
+            <option value="INATIVO">Inativo</option>
+            <option value="ESGOTADO">Esgotado</option>
+          </select>
+          <span className="mt-1 block text-xs text-slate-500">Somente ativos entram na tela de registrar venda.</span>
+        </div>
       </div>
 
       <DataTable
@@ -127,6 +131,9 @@ export default function ProductList() {
             <h3 className="text-lg font-bold text-maricota-text">Ajuste manual de estoque</h3>
             <p className="mt-1 text-sm text-slate-600">{adjustProduct.name}</p>
             <p className="text-xs text-slate-500">Estoque atual: {adjustProduct.stockQuantity}</p>
+            <p className="mt-2 text-xs text-slate-500">
+              Use para perdas, conferencia fisica ou correcao. Vendas e devolucoes ja atualizam o saldo sozinhas.
+            </p>
 
             {adjMessage.success && (
               <div className="mt-3 rounded-2xl bg-green-50 px-3 py-2 text-sm text-green-700">{adjMessage.success}</div>
@@ -136,7 +143,9 @@ export default function ProductList() {
             )}
 
             <label className="mt-4 block">
-              <span className="mb-2 block text-sm font-semibold">Quantidade (+ entrada / - saida)</span>
+              <RequiredFieldLabel tip="Numero de pecas que entram (positivo) ou saem (negativo) do estoque. Ex.: +1 chegou um; -2 faltou dois na conferencia.">
+                Quantidade (+ entrada / - saida)
+              </RequiredFieldLabel>
               <input
                 className="input"
                 required
@@ -147,7 +156,9 @@ export default function ProductList() {
               />
             </label>
             <label className="mt-3 block">
-              <span className="mb-2 block text-sm font-semibold">Motivo (obrigatorio)</span>
+              <RequiredFieldLabel tip="Explique em uma frase por que o estoque mudou (obrigatorio para auditoria: quem olhar depois entende o motivo).">
+                Motivo
+              </RequiredFieldLabel>
               <textarea
                 className="input min-h-24"
                 required

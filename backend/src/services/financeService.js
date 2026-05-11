@@ -213,12 +213,107 @@ async function getDashboardSummary(query = {}) {
     periodRevenue,
     periodEstimatedProfit,
     periodDiscounts,
-    recentSales
+    recentSales,
+    dailySalesChart: buildDailyChartSeries(allSales, 30),
+    monthlySalesChart: buildMonthlyChartSeries(allSales, 12)
   };
 }
 
 function sumSales(sales) {
   return roundCurrency(sales.reduce((sum, sale) => sum + saleEffectiveTotalAmount(sale), 0));
+}
+
+/** Pecas liquidas vendidas na venda (devolucoes abatem por item). */
+function netPiecesSold(sale) {
+  if (isCancelled(sale)) return 0;
+  const retMap = returnedQtyByProduct(sale);
+  let n = 0;
+  for (const item of sale.items || []) {
+    if (!item) continue;
+    const ret = retMap[item.productId] || 0;
+    const net = Number(item.quantity) - ret;
+    if (net > 0) n += net;
+  }
+  return n;
+}
+
+/** Ultimos N dias (inclui hoje): faturamento e quantidade de pecas por dia, fuso local do servidor. */
+function buildDailyChartSeries(allSales, days = 30) {
+  const today = new Date();
+  const end = endOfDay(today);
+  const startDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() - (days - 1), 0, 0, 0, 0);
+
+  const keys = [];
+  for (let i = 0; i < days; i++) {
+    const d = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + i, 0, 0, 0, 0);
+    keys.push(formatDateOnly(d));
+  }
+
+  const map = {};
+  for (const k of keys) map[k] = { revenue: 0, pieces: 0 };
+
+  for (const sale of allSales) {
+    if (isCancelled(sale)) continue;
+    const sold = new Date(sale.soldAt);
+    if (sold < startDay || sold > end) continue;
+    const key = formatDateOnly(sold);
+    if (map[key] == null) continue;
+    map[key].revenue = roundCurrency(map[key].revenue + saleEffectiveTotalAmount(sale));
+    map[key].pieces += netPiecesSold(sale);
+  }
+
+  return keys.map((date) => {
+    const [, m, day] = date.split("-");
+    return {
+      date,
+      shortLabel: `${day}/${m}`,
+      revenue: map[date].revenue,
+      pieces: map[date].pieces
+    };
+  });
+}
+
+function formatMonthAxisLabel(ym) {
+  const [yStr, mStr] = ym.split("-");
+  const y = parseInt(yStr, 10);
+  const m = parseInt(mStr, 10);
+  if (!y || !m) return ym;
+  const d = new Date(y, m - 1, 1);
+  const shortMonth = d
+    .toLocaleDateString("pt-BR", { month: "short" })
+    .replace(/\./g, "")
+    .trim();
+  const cap = shortMonth.charAt(0).toUpperCase() + shortMonth.slice(1);
+  return `${cap}/${String(y).slice(-2)}`;
+}
+
+/** Ultimos M meses (inclui mes atual): faturamento e pecas por mes. */
+function buildMonthlyChartSeries(allSales, monthsBack = 12) {
+  const end = new Date();
+  const keys = [];
+  for (let i = monthsBack - 1; i >= 0; i--) {
+    const d = new Date(end.getFullYear(), end.getMonth() - i, 1);
+    keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+  }
+
+  const map = {};
+  for (const k of keys) map[k] = { revenue: 0, pieces: 0 };
+
+  for (const sale of allSales) {
+    if (isCancelled(sale)) continue;
+    const sold = new Date(sale.soldAt);
+    const ym = `${sold.getFullYear()}-${String(sold.getMonth() + 1).padStart(2, "0")}`;
+    if (map[ym] == null) continue;
+    map[ym].revenue = roundCurrency(map[ym].revenue + saleEffectiveTotalAmount(sale));
+    map[ym].pieces += netPiecesSold(sale);
+  }
+
+  return keys.map((month) => ({
+    month,
+    shortLabel: formatMonthAxisLabel(month),
+    revenue: map[month].revenue,
+    pieces: map[month].pieces
+  }));
 }
 
 function getPaymentMethods(sales) {

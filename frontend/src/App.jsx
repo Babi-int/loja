@@ -40,7 +40,9 @@ export default function App() {
         <Route path="/vendas" element={<SaleHistory />} />
         <Route path="/financeiro" element={<FinanceReport />} />
         <Route path="/configuracoes" element={<Settings />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
