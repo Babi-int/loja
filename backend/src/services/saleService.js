@@ -48,7 +48,25 @@ function resolveProductStockStatus(prevStatus, newStock) {
   return "ATIVO";
 }
 
-async function listSales() {
+async function hasAnySale() {
+  const snapshot = await salesRef.limit(1).get();
+  return !snapshot.empty;
+}
+
+async function listSales(options = {}) {
+  const customerId = options.customerId;
+
+  if (customerId) {
+    const snapshot = await salesRef.where("customerId", "==", customerId).get();
+    const rows = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    rows.sort((a, b) => {
+      const ta = new Date(a.soldAt || a.createdAt || 0).getTime();
+      const tb = new Date(b.soldAt || b.createdAt || 0).getTime();
+      return tb - ta;
+    });
+    return rows;
+  }
+
   const snapshot = await salesRef.orderBy("soldAt", "desc").get();
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
@@ -395,6 +413,7 @@ async function resolveProductForSale(transaction, item) {
 module.exports = {
   cancelSale,
   createSale,
+  hasAnySale,
   listSales,
   registerPartialReturn
 };

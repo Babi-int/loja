@@ -11,12 +11,40 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 
 const app = express();
 
+/** Origem na lista aponta para localhost (qualquer porta do Vite). */
+function looksLikeLocalDevEntry(entry) {
+  return (
+    /^https?:\/\/localhost(?::\d+)?$/i.test(entry) ||
+    /^https?:\/\/127\.0\.0\.1(?::\d+)?$/i.test(entry) ||
+    /^https?:\/\/\[::1\](?::\d+)?$/i.test(entry)
+  );
+}
+
+/** Navegador envia origem com porta (ex.: Vite em 5174 enquanto .env citava 5173). */
+function isLocalDevBrowserOrigin(origin) {
+  return (
+    /^https?:\/\/localhost:\d+$/i.test(origin) ||
+    /^https?:\/\/127\.0\.0\.1:\d+$/i.test(origin) ||
+    /^https?:\/\/\[::1\]:\d+$/i.test(origin)
+  );
+}
+
 /** Uma origem ou varias separadas por virgula (ex.: localhost + IP na rede para o mesmo front). */
 function resolveCorsOrigin() {
   const raw = process.env.FRONTEND_URL;
   if (!raw || raw === "*") return true;
   const list = raw.split(",").map((s) => s.trim()).filter(Boolean);
   if (list.length === 0) return true;
+
+  if (list.some(looksLikeLocalDevEntry)) {
+    return (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (isLocalDevBrowserOrigin(origin)) return callback(null, true);
+      if (list.includes(origin)) return callback(null, true);
+      return callback(null, false);
+    };
+  }
+
   if (list.length === 1) return list[0];
   return list;
 }

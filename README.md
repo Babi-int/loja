@@ -16,7 +16,19 @@ Sistema web para controle de estoque, vendas e financeiro de uma loja de roupa i
 
 ## Como rodar localmente
 
-### 1. Backend
+### Inicio rapido (recomendado)
+
+Na **raiz do repositorio**, apos configurar o `backend/.env` (Firebase) e rodar o seed uma vez:
+
+```bash
+npm install
+npm run install:all
+npm run dev
+```
+
+Isso sobe **API e frontend** ao mesmo tempo. O dashboard e demais telas precisam da API em `http://localhost:3333/api`. Para subir so o Vite: `npm run dev:web-only`.
+
+### 1. Backend (se preferir terminais separados)
 
 ```bash
 cd backend

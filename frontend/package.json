@@ -11,6 +11,9 @@
   "dependencies": {
     "@vitejs/plugin-react": "latest",
     "axios": "latest",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
+    "maricota-kids": "file:..",
     "react": "latest",
     "react-dom": "latest",
     "react-router-dom": "latest",

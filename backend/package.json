@@ -8,7 +8,9 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed": "node scripts/seed.js",
-    "seed:products": "node scripts/seed-products.js"
+    "seed:demo": "node scripts/seed-demo.js",
+    "seed:products": "node scripts/seed-products.js",
+    "seed:products:extra": "node scripts/seed-products-extra.js"
   },
   "dependencies": {
     "bcryptjs": "latest",
@@ -17,6 +19,7 @@
     "express": "latest",
     "firebase-admin": "latest",
     "jsonwebtoken": "latest",
+    "maricota-kids": "file:..",
     "morgan": "latest",
     "zod": "latest"
   },

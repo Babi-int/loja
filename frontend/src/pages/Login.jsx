@@ -65,15 +65,23 @@ function getNetworkErrorMessage() {
           ].join("\n")
         : "";
 
+    const apiBase = API_BASE.replace(/\/$/, "");
+    const hostNoApi = apiBase.replace(/\/api\/?$/i, "");
+    const healthApi = `${apiBase}/health`;
+    const healthRoot = `${hostNoApi}/health`;
+    const thisOrigin =
+      typeof window !== "undefined" ? window.location.origin : "http://localhost:5173";
+
     return [
       `Nao foi possivel conectar a API em ${API_BASE}.`,
       "",
-      "No seu PC: em outro terminal rode na pasta do projeto:",
-      "  cd backend",
-      "  npm run dev",
-      "A API deve subir na porta 3333 (ou ajuste a porta no backend e no arquivo frontend/.env).",
+      "1) Teste a API (nova aba): " + healthApi + " ou " + healthRoot + " — se aparecer JSON com \"status\":\"ok\", o backend esta rodando.",
+      "2) Backend parado: na raiz do projeto rode npm run dev:backend (ou: cd backend e npm run dev). Porta padrao 3333.",
+      "3) Backend ok mas o navegador bloqueia (CORS): no backend/.env, FRONTEND_URL deve incluir a origem deste painel, por exemplo:",
+      "   " + thisOrigin,
+      "   Varias origens: separadas por virgula, sem espacos. Reinicie o backend apos editar.",
       "",
-      "Depois de mudar frontend/.env, pare e rode de novo: npm run dev no frontend.",
+      "4) Apos mudar frontend/.env, pare e rode de novo npm run dev no frontend.",
       lanHint
     ]
       .filter(Boolean)

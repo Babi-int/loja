@@ -1,3 +1,21 @@
+const PAYMENT_METHOD_LABELS = {
+  PIX: "Pix",
+  DINHEIRO: "Dinheiro",
+  DEBITO: "Debito",
+  CREDITO: "Credito"
+};
+
+/** Rotulo para exibir metodo gravado na venda (API / registrar venda). */
+export function formatPaymentMethod(code) {
+  if (!code) return "-";
+  return PAYMENT_METHOD_LABELS[String(code)] || String(code);
+}
+
+/** Alinhado ao backend (money.roundCurrency). */
+export function roundCurrency(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
 export function formatCurrency(value) {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",

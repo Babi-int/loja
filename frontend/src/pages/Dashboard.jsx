@@ -11,6 +11,7 @@ import {
   IconSoldOut
 } from "../components/icons/DashboardStatIcons";
 import DashboardSalesCharts from "../components/DashboardSalesCharts";
+import SoldOutProductsModal from "../components/SoldOutProductsModal";
 import { formatCurrency, formatDate } from "../utils/formatters";
 
 /** Formato AAAA-MM-DD para querystring; backend interpreta no fuso local do servidor. */
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [soldOutModalOpen, setSoldOutModalOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,7 +47,15 @@ export default function Dashboard() {
       setSummary(data);
     } catch (err) {
       setSummary(null);
-      setError(err.response?.data?.message || "Nao foi possivel carregar o dashboard.");
+      const apiMsg = err.response?.data?.message;
+      const offline =
+        !err.response && (err.code === "ERR_NETWORK" || err.message === "Network Error");
+      setError(
+        apiMsg ||
+          (offline
+            ? "Nao foi possivel conectar a API. Inicie o backend (porta 3333), por exemplo na raiz: npm run dev, ou npm run dev:backend. Confira tambem VITE_API_URL no frontend."
+            : "Nao foi possivel carregar o dashboard.")
+      );
     } finally {
       setLoading(false);
     }
@@ -60,6 +70,10 @@ export default function Dashboard() {
     if (n == null) return "Ate 5 unidades (padrao)";
     return `Ate ${n} unidade${n === 1 ? "" : "s"} (configurado em Configuracoes)`;
   }, [summary?.lowStockThreshold]);
+
+  const soldOutList = Array.isArray(summary?.soldOutProducts) ? summary.soldOutProducts : [];
+  const soldOutPreviewNames = soldOutList.slice(0, 5).map((p) => p.name);
+  const soldOutMoreCount = Math.max(0, soldOutList.length - 5);
 
   const cards = [
     {
@@ -81,7 +95,13 @@ export default function Dashboard() {
       value: summary?.soldOutCount ?? 0,
       tone: "blue",
       icon: <IconSoldOut />,
-      hint: "Estoque zero ou marcados como esgotados no cadastro."
+      hint: "Estoque zero ou marcados como esgotados no cadastro.",
+      iconHoverList: soldOutPreviewNames.length > 0 ? soldOutPreviewNames : undefined,
+      iconHoverFooter:
+        soldOutMoreCount > 0
+          ? `Mais ${soldOutMoreCount} produto${soldOutMoreCount === 1 ? "" : "s"}.`
+          : undefined,
+      iconHoverOnMaisClick: soldOutList.length > 0 ? () => setSoldOutModalOpen(true) : undefined
     },
     {
       title: "Vendas no periodo",
@@ -222,6 +242,12 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+
+      <SoldOutProductsModal
+        open={soldOutModalOpen}
+        onClose={() => setSoldOutModalOpen(false)}
+        products={soldOutList}
+      />
     </>
   );
 }

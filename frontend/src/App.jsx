@@ -11,6 +11,8 @@ import ProductList from "./pages/ProductList";
 import SaleForm from "./pages/SaleForm";
 import SaleHistory from "./pages/SaleHistory";
 import Settings from "./pages/Settings";
+import SupplierForm from "./pages/SupplierForm";
+import SupplierList from "./pages/SupplierList";
 
 /** Área logada: sem token, redireciona para /login (substitui o histórico). */
 function PrivateRoute({ children }) {
@@ -36,6 +38,9 @@ export default function App() {
         <Route path="/clientes" element={<CustomerList />} />
         <Route path="/clientes/novo" element={<CustomerForm />} />
         <Route path="/clientes/:id" element={<CustomerForm />} />
+        <Route path="/fornecedores" element={<SupplierList />} />
+        <Route path="/fornecedores/novo" element={<SupplierForm />} />
+        <Route path="/fornecedores/:id" element={<SupplierForm />} />
         <Route path="/vendas/nova" element={<SaleForm />} />
         <Route path="/vendas" element={<SaleHistory />} />
         <Route path="/financeiro" element={<FinanceReport />} />

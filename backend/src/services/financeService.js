@@ -178,7 +178,18 @@ async function getDashboardSummary(query = {}) {
   const lowStockCount = products.filter(
     (product) => product.stockQuantity > 0 && product.stockQuantity <= lowStockThreshold
   ).length;
-  const soldOutCount = products.filter((product) => product.stockQuantity <= 0 || product.status === "ESGOTADO").length;
+
+  const soldOutRows = products.filter(
+    (product) => product.stockQuantity <= 0 || product.status === "ESGOTADO"
+  );
+  const soldOutCount = soldOutRows.length;
+  const soldOutSorted = [...soldOutRows].sort((a, b) =>
+    String(a.name || "").localeCompare(String(b.name || ""), "pt", { sensitivity: "base" })
+  );
+  const soldOutProducts = soldOutSorted.map((p) => ({
+    id: p.id,
+    name: String(p.name || "").trim() || "Sem nome"
+  }));
 
   const periodRevenue = sumSales(salesInPeriod);
   const periodEstimatedProfit = profitForSales(salesInPeriod);
@@ -203,6 +214,7 @@ async function getDashboardSummary(query = {}) {
     productsCount,
     lowStockCount,
     soldOutCount,
+    soldOutProducts,
     lowStockThreshold,
     storeName: settings.storeName,
     filter: {

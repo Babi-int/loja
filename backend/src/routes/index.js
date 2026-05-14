@@ -5,6 +5,7 @@ const productRoutes = require("./productRoutes");
 const saleRoutes = require("./saleRoutes");
 const financeRoutes = require("./financeRoutes");
 const customerRoutes = require("./customerRoutes");
+const supplierRoutes = require("./supplierRoutes");
 const settingsRoutes = require("./settingsRoutes");
 const userRoutes = require("./userRoutes");
 
@@ -14,6 +15,7 @@ routes.get("/health", (req, res) => res.json({ status: "ok", app: "Maricota Kids
 routes.use("/auth", authRoutes);
 routes.use("/products", productRoutes);
 routes.use("/customers", customerRoutes);
+routes.use("/suppliers", supplierRoutes);
 routes.use("/sales", saleRoutes);
 routes.use("/finance", financeRoutes);
 routes.use("/settings", settingsRoutes);

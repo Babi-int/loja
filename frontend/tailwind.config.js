@@ -5,16 +5,16 @@ export default {
     extend: {
       colors: {
         maricota: {
-          pink: "#f7b6c8",
-          rose: "#fff1f5",
-          blue: "#b7dff5",
-          mint: "#cdebd6",
-          yellow: "#fff3bf",
-          text: "#4f4650"
+          pink: "#57a0d2",
+          rose: "#ecf6fc",
+          blue: "#8ad0f0",
+          mint: "#d4eaf5",
+          yellow: "#f4fafd",
+          text: "#1a3652"
         }
       },
       boxShadow: {
-        soft: "0 12px 35px rgba(173, 127, 145, 0.16)"
+        soft: "0 12px 35px rgba(39, 120, 180, 0.18)"
       }
     }
   },

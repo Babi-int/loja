@@ -1,4 +1,4 @@
-const LOGO_SRC = "/logo-maricota-kids.png";
+const LOGO_SRC = "/logo-simplerp.png";
 
 export default function BrandLogo({ className = "", variant = "default" }) {
   const sizes =
@@ -11,7 +11,7 @@ export default function BrandLogo({ className = "", variant = "default" }) {
   return (
     <img
       src={LOGO_SRC}
-      alt="Maricota Kids — Tratando seu estilo com carinho"
+      alt="SIMPLERP — Sistemas ERP para pequenas empresas"
       className={`${sizes} ${className}`.trim()}
       decoding="async"
     />

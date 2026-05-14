@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/client";
 import PageHeader from "../components/PageHeader";
-import { formatCurrency } from "../utils/formatters";
+import { formatCurrency, roundCurrency } from "../utils/formatters";
+import { generateSaleReceiptPdf } from "../utils/saleReceiptPdf";
 
 /** PDV: carrinho em memória; envio final registra venda e delega estoque/consistência ao backend. */
 export default function SaleForm() {
@@ -16,6 +17,8 @@ export default function SaleForm() {
   });
   const [checkout, setCheckout] = useState({
     discount: 0,
+    /** Desconto em % sobre o subtotal ou valor fixo em R$. */
+    discountKind: "MONEY",
     paymentMethod: "PIX",
     isInstallment: false,
     installments: 1,
@@ -24,10 +27,22 @@ export default function SaleForm() {
   });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [storeName, setStoreName] = useState("Maricota Kids");
+  const [pdfBusy, setPdfBusy] = useState(false);
+  /** null = checagem em andamento; libera PDF da tela so apos ao menos uma venda persistida. */
+  const [hasRegisteredSales, setHasRegisteredSales] = useState(null);
 
   useEffect(() => {
     api.get("/products").then(({ data }) => setProducts(data.filter((product) => product.status === "ATIVO")));
     api.get("/customers").then(({ data }) => setCustomers(data));
+    api
+      .get("/settings")
+      .then(({ data }) => setStoreName(data.storeName?.trim() || "Maricota Kids"))
+      .catch(() => setStoreName("Maricota Kids"));
+    api
+      .get("/sales/exists")
+      .then(({ data }) => setHasRegisteredSales(Boolean(data?.hasSales)))
+      .catch(() => setHasRegisteredSales(false));
   }, []);
 
   const selectedProduct = products.find((product) => product.id === picker.productId);
@@ -37,10 +52,60 @@ export default function SaleForm() {
     [cart]
   );
 
-  const total = Math.max(cartSubtotal - Number(checkout.discount || 0), 0);
-  const installmentValue = total / Number(checkout.installments || 1);
+  const discountAmountReais = useMemo(() => {
+    const raw = Number(checkout.discount || 0);
+    if (checkout.discountKind === "PERCENT") {
+      const pct = Math.min(Math.max(raw, 0), 100);
+      return roundCurrency(cartSubtotal * (pct / 100));
+    }
+    return roundCurrency(Math.max(0, raw));
+  }, [cartSubtotal, checkout.discount, checkout.discountKind]);
+
+  const total = Math.max(roundCurrency(cartSubtotal - discountAmountReais), 0);
+  const installmentValue = roundCurrency(total / Number(checkout.installments || 1));
   const change =
     checkout.paymentMethod === "DINHEIRO" ? Number(checkout.paidAmount || 0) - total : 0;
+
+  function customerLabelForPdf() {
+    if (!customerId) return "Nao informado / venda avulsa";
+    const c = customers.find((x) => x.id === customerId);
+    if (!c) return "-";
+    let s = c.name;
+    if (c.childName) s += ` — crianca: ${c.childName}`;
+    return s;
+  }
+
+  async function handlePrintPdf() {
+    if (cart.length === 0) {
+      setError("Adicione itens ao carrinho para gerar a nota.");
+      return;
+    }
+    setError("");
+    setPdfBusy(true);
+    try {
+      await generateSaleReceiptPdf({
+        storeName,
+        siteHost: typeof window !== "undefined" ? window.location.host : "",
+        customerLabel: customerLabelForPdf(),
+        cart,
+        discount: discountAmountReais,
+        paymentMethod: checkout.paymentMethod,
+        isInstallment: Boolean(checkout.isInstallment),
+        installments: Number(checkout.installments || 1),
+        observation: checkout.observation,
+        cartSubtotal,
+        total,
+        installmentValue,
+        change,
+        paidAmount: Number(checkout.paidAmount || 0)
+      });
+    } catch (e) {
+      console.error(e);
+      setError("Nao foi possivel gerar o PDF. Tente de novo.");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
 
   function updateCheckout(field, value) {
     setCheckout((current) => ({ ...current, [field]: value }));
@@ -160,7 +225,7 @@ export default function SaleForm() {
           quantity: line.quantity,
           unitSalePrice: line.unitSalePrice
         })),
-        discount: Number(checkout.discount || 0),
+        discount: discountAmountReais,
         paymentMethod: checkout.paymentMethod,
         isInstallment: Boolean(checkout.isInstallment),
         installments: Number(checkout.installments || 1),
@@ -176,6 +241,7 @@ export default function SaleForm() {
       setPicker({ productId: "", quantity: 1 });
       setCheckout({
         discount: 0,
+        discountKind: "MONEY",
         paymentMethod: "PIX",
         isInstallment: false,
         installments: 1,
@@ -184,6 +250,7 @@ export default function SaleForm() {
       });
       const { data } = await api.get("/products");
       setProducts(data.filter((product) => product.status === "ATIVO"));
+      setHasRegisteredSales(true);
     } catch (err) {
       setError(err.response?.data?.message || "Nao foi possivel registrar a venda.");
     }
@@ -340,17 +407,45 @@ export default function SaleForm() {
         </div>
 
         <label>
-          <span className="mb-2 block text-sm font-semibold">Desconto (sobre o total)</span>
+          <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="text-sm font-semibold">Desconto (sobre o total)</span>
+            <div className="flex items-center gap-4 text-sm font-normal">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={checkout.discountKind === "PERCENT"}
+                  onChange={(e) => updateCheckout("discountKind", e.target.checked ? "PERCENT" : "MONEY")}
+                />
+                <span>%</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={checkout.discountKind === "MONEY"}
+                  onChange={(e) => updateCheckout("discountKind", e.target.checked ? "MONEY" : "PERCENT")}
+                />
+                <span>R$</span>
+              </label>
+            </div>
+          </div>
           <input
             className="input"
             min="0"
+            max={checkout.discountKind === "PERCENT" ? 100 : undefined}
             step="0.01"
             type="number"
             value={checkout.discount}
             onChange={(event) => updateCheckout("discount", event.target.value)}
           />
           <span className="mt-1 block text-xs text-slate-500">
-            Valor fixo em reais retirado do subtotal do carrinho; confira limites em Configuracoes.
+            {checkout.discountKind === "PERCENT" ? (
+              <>
+                Percentual sobre o subtotal do carrinho (ate 100%). Equivale a{" "}
+                <strong>{formatCurrency(discountAmountReais)}</strong> nesta compra.
+              </>
+            ) : (
+              <>Valor fixo em reais retirado do subtotal; confira limites em Configuracoes.</>
+            )}
           </span>
         </label>
 
@@ -422,20 +517,38 @@ export default function SaleForm() {
 
         <div className="grid gap-3 rounded-3xl bg-maricota-rose p-5 lg:col-span-2 sm:grid-cols-2 lg:grid-cols-5">
           <Summary label="Subtotal carrinho" value={formatCurrency(cartSubtotal)} />
-          <Summary label="Desconto" value={formatCurrency(checkout.discount || 0)} />
+          <Summary label="Desconto" value={formatCurrency(discountAmountReais)} />
           <Summary label="Total a pagar" value={formatCurrency(total)} />
           <Summary label="Parcela" value={formatCurrency(installmentValue)} />
           <Summary label="Troco" value={formatCurrency(Math.max(change, 0))} />
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:col-span-2">
           <button className="btn-primary w-full sm:w-auto" disabled={cart.length === 0} type="submit">
             Finalizar venda
           </button>
-          <p className="mt-2 text-xs text-slate-500">
-            Ao confirmar, o estoque baixa e a venda entra no historico e nos relatorios.
-          </p>
+          <span
+            className="inline-flex w-full sm:w-auto"
+            title={
+              hasRegisteredSales === false
+                ? "Registre uma venda para poder baixar o arquivo"
+                : undefined
+            }
+          >
+            <button
+              className="btn-secondary w-full sm:w-auto disabled:pointer-events-none"
+              disabled={pdfBusy || hasRegisteredSales !== true}
+              type="button"
+              onClick={handlePrintPdf}
+            >
+              {pdfBusy ? "Gerando PDF..." : "Baixar nota em PDF"}
+            </button>
+          </span>
         </div>
+        <p className="mt-2 text-xs text-slate-500 lg:col-span-2">
+          Ao confirmar, o estoque baixa e a venda entra no historico e nos relatorios. O PDF espelha o carrinho e o
+          resumo atuais; com carrinho vazio, ao gerar o PDF sera pedido para adicionar itens.
+        </p>
       </form>
     </>
   );

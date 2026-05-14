@@ -11,6 +11,13 @@ import {
 } from "recharts";
 import { formatCurrency } from "../utils/formatters";
 
+const GRID_LIGHT = "#dbeef8";
+const BAR_PRIMARY = "#57a0d2";
+const BAR_SECONDARY = "#8ad0f0";
+const LINE_ACCENT = "#2d7aae";
+const AXIS_PRIMARY = "#7eb8dc";
+const AXIS_SECONDARY = "#5a9ecb";
+
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   const row = payload[0]?.payload;
@@ -38,7 +45,7 @@ export default function DashboardSalesCharts({ daily = [], monthly = [] }) {
       <div className="card shadow-sm ring-1 ring-pink-100/60">
         <h2 className="mb-1 flex items-center gap-2 text-base font-bold text-maricota-text">
           <span
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-pink-200/80 text-[10px] text-pink-800"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-maricota-blue/50 text-[10px] text-maricota-text"
             aria-hidden
           >
             30d
@@ -51,21 +58,21 @@ export default function DashboardSalesCharts({ daily = [], monthly = [] }) {
         <div className="h-[300px] w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={daily} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#fce7f3" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_LIGHT} vertical={false} />
               <XAxis dataKey="shortLabel" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
               <YAxis
                 yAxisId="left"
                 tick={{ fontSize: 10 }}
                 tickFormatter={formatAxisMoney}
                 width={52}
-                axisLine={{ stroke: "#e8a0bf" }}
+                axisLine={{ stroke: AXIS_PRIMARY }}
               />
               <YAxis
                 yAxisId="right"
                 orientation="right"
                 tick={{ fontSize: 10 }}
                 width={36}
-                axisLine={{ stroke: "#99f6e4" }}
+                axisLine={{ stroke: AXIS_SECONDARY }}
               />
               <Tooltip content={<ChartTooltip />} />
               <Legend
@@ -76,7 +83,7 @@ export default function DashboardSalesCharts({ daily = [], monthly = [] }) {
                 yAxisId="left"
                 dataKey="revenue"
                 name="Faturamento (R$)"
-                fill="#f472b6"
+                fill={BAR_PRIMARY}
                 radius={[4, 4, 0, 0]}
                 maxBarSize={36}
               />
@@ -85,9 +92,9 @@ export default function DashboardSalesCharts({ daily = [], monthly = [] }) {
                 type="monotone"
                 dataKey="pieces"
                 name="Qtd. pecas"
-                stroke="#14b8a6"
+                stroke={LINE_ACCENT}
                 strokeWidth={2}
-                dot={{ r: 3, fill: "#14b8a6" }}
+                dot={{ r: 3, fill: LINE_ACCENT }}
                 activeDot={{ r: 5 }}
               />
             </ComposedChart>
@@ -98,7 +105,7 @@ export default function DashboardSalesCharts({ daily = [], monthly = [] }) {
       <div className="card shadow-sm ring-1 ring-pink-100/60">
         <h2 className="mb-1 flex items-center gap-2 text-base font-bold text-maricota-text">
           <span
-            className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-violet-200/80 text-[10px] text-violet-900"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-maricota-blue/60 text-[10px] text-maricota-text"
             aria-hidden
           >
             12m
@@ -111,21 +118,21 @@ export default function DashboardSalesCharts({ daily = [], monthly = [] }) {
         <div className="h-[300px] w-full min-w-0">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={monthly} margin={{ top: 8, right: 12, left: 4, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#ede9fe" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID_LIGHT} vertical={false} />
               <XAxis dataKey="shortLabel" tick={{ fontSize: 10 }} interval={0} angle={-20} textAnchor="end" height={56} />
               <YAxis
                 yAxisId="left"
                 tick={{ fontSize: 10 }}
                 tickFormatter={formatAxisMoney}
                 width={52}
-                axisLine={{ stroke: "#c4b5fd" }}
+                axisLine={{ stroke: AXIS_PRIMARY }}
               />
               <YAxis
                 yAxisId="right"
                 orientation="right"
                 tick={{ fontSize: 10 }}
                 width={36}
-                axisLine={{ stroke: "#fdba74" }}
+                axisLine={{ stroke: AXIS_SECONDARY }}
               />
               <Tooltip content={<ChartTooltip />} />
               <Legend
@@ -136,7 +143,7 @@ export default function DashboardSalesCharts({ daily = [], monthly = [] }) {
                 yAxisId="left"
                 dataKey="revenue"
                 name="Faturamento (R$)"
-                fill="#a78bfa"
+                fill={BAR_SECONDARY}
                 radius={[4, 4, 0, 0]}
                 maxBarSize={40}
               />
@@ -145,9 +152,9 @@ export default function DashboardSalesCharts({ daily = [], monthly = [] }) {
                 type="monotone"
                 dataKey="pieces"
                 name="Qtd. pecas"
-                stroke="#f97316"
+                stroke={BAR_PRIMARY}
                 strokeWidth={2}
-                dot={{ r: 3, fill: "#f97316" }}
+                dot={{ r: 3, fill: BAR_PRIMARY }}
                 activeDot={{ r: 5 }}
               />
             </ComposedChart>

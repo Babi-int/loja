@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/client";
+import CustomerPurchaseHistoryModal from "../components/CustomerPurchaseHistoryModal";
 import DataTable from "../components/DataTable";
 import PageHeader from "../components/PageHeader";
 import { formatDate } from "../utils/formatters";
@@ -8,6 +9,7 @@ import { formatDate } from "../utils/formatters";
 export default function CustomerList() {
   const [customers, setCustomers] = useState([]);
   const [search, setSearch] = useState("");
+  const [historyCustomer, setHistoryCustomer] = useState(null);
 
   useEffect(() => {
     api.get("/customers").then(({ data }) => setCustomers(data));
@@ -43,6 +45,12 @@ export default function CustomerList() {
         <p className="mt-2 text-xs text-slate-500">Busca instantanea na lista ja carregada; nao altera o cadastro.</p>
       </div>
 
+      <CustomerPurchaseHistoryModal
+        open={historyCustomer != null}
+        customer={historyCustomer}
+        onClose={() => setHistoryCustomer(null)}
+      />
+
       <DataTable
         data={filtered}
         columns={[
@@ -59,9 +67,18 @@ export default function CustomerList() {
             key: "actions",
             label: "Acoes",
             render: (row) => (
-              <Link className="font-semibold text-pink-500" to={`/clientes/${row.id}`}>
-                Editar
-              </Link>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                <Link className="font-semibold text-pink-500" to={`/clientes/${row.id}`}>
+                  Editar
+                </Link>
+                <button
+                  type="button"
+                  className="font-semibold text-pink-500 hover:underline"
+                  onClick={() => setHistoryCustomer({ id: row.id, name: row.name })}
+                >
+                  Historico do cliente
+                </button>
+              </div>
             )
           }
         ]}

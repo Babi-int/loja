@@ -4,14 +4,13 @@ import { useAuth } from "../context/AuthContext";
 
 const links = [
   { to: "/", label: "Dashboard" },
-  { to: "/produtos", label: "Produtos" },
-  { to: "/produtos/novo", label: "Novo produto" },
-  { to: "/clientes", label: "Clientes" },
-  { to: "/clientes/novo", label: "Novo cliente" },
   { to: "/vendas/nova", label: "Registrar venda" },
-  { to: "/vendas", label: "Historico" },
+  { to: "/produtos", label: "Produtos" },
+  { to: "/clientes", label: "Clientes" },
+  { to: "/vendas", label: "Histórico" },
   { to: "/financeiro", label: "Financeiro" },
-  { to: "/configuracoes", label: "Configuracoes" }
+  { to: "/fornecedores", label: "Fornecedor" },
+  { to: "/configuracoes", label: "Configurações" }
 ];
 
 export default function AppLayout() {
