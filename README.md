@@ -82,7 +82,13 @@ A API ja escuta em `0.0.0.0` por padrao (`HOST` no `.env` do backend; use `127.0
 3. No `.env` (ou painel) do **backend**: `FRONTEND_URL=https://seu-projeto.vercel.app` (sem `/` no final). Se precisar de mais de uma origem, separe por virgula.
 4. Firebase e demais variaveis do backend devem estar configurados no host da API.
 
-Na raiz do repositorio existem `vercel.json` (build em `frontend/` e SPA fallback) e `middleware.js` (proxy `/api` quando `VERCEL_BACKEND_URL` esta definido). Ao conectar o Git na Vercel, use **Root Directory** na raiz do repo (onde esta o `vercel.json`), nao so a pasta `frontend`.
+Na raiz do repositorio existem `vercel.json` (build em `frontend/` e SPA fallback), `frontend/vercel.json` (se no painel voce definir **Root Directory** = `frontend`, sem `--prefix`) e `middleware.js` (proxy `/api` quando `VERCEL_BACKEND_URL` esta definido). Ao conectar o Git na Vercel:
+
+- **Recomendado:** **Root Directory** = raiz do repo (campo **totalmente vazio**), onde estao `vercel.json`, `middleware.js` e a pasta `frontend/`. Salve e faca **Redeploy**. **Nunca** use `frontend/public`.
+- Se o build ainda mostrar `npm install --prefix frontend`, o painel ainda nao esta na raiz: em **Deployments** → abra o deploy com erro → **Deployment Settings** (ou **Build & Development Settings**) e confira **Root Directory**; corrija na aba **Settings** → **General** do projeto.
+- **Alternativa:** Root Directory = `frontend` — o Vercel usa so `frontend/vercel.json` (`outputDirectory`: `dist`, sem `--prefix`). Nesse modo o `middleware.js` na raiz do Git **nao** entra no deploy; prefira uso com `VITE_API_URL` direto ou outro proxy.
+
+**Build Failed / exit 254:** quase sempre **Root Directory** errado ou antigo comando em cache ate o proximo redeploy apos Salvar.
 
 Se nem `VITE_API_URL` no build nem `VERCEL_BACKEND_URL` na Vercel estiverem corretos, o login no site publico falha.
 
