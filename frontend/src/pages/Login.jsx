@@ -3,8 +3,9 @@ import { Navigate } from "react-router-dom";
 import BrandLogo from "../components/BrandLogo";
 import RequiredFieldLabel from "../components/RequiredFieldLabel";
 import { useAuth } from "../context/AuthContext";
+import { getApiBaseUrl } from "../config/apiBase";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3333/api";
+const API_BASE = getApiBaseUrl();
 
 function isLocalApiUrl() {
   return /localhost|127\.0\.0\.1/i.test(API_BASE);
@@ -15,7 +16,7 @@ function isRemoteHostedApi() {
   return /^https:\/\//i.test(API_BASE) && !isLocalApiUrl();
 }
 
-/** Build de producao com API em localhost — no Netlify o navegador do visitante nao alcanca seu PC. */
+/** Build de producao com API em localhost — no site publico (ex.: Vercel) o navegador do visitante nao alcanca seu PC. */
 const PROD_API_MISCONFIGURED =
   import.meta.env.PROD && /localhost|127\.0\.0\.1/i.test(API_BASE);
 
@@ -34,7 +35,7 @@ function getRemoteApiNetworkHelp() {
     `2) Teste no navegador (nova aba): ${healthApi} ou ${healthRoot} — deve aparecer JSON com "status":"ok". Se nao abrir, o problema e no deploy/host, nao no login.`,
     "3) CORS: no backend na Render, defina FRONTEND_URL com a origem deste site, por exemplo:",
     `   ${origin || "http://localhost:5173"}`,
-    "   Se usar mais de um link (localhost + Netlify + IP na rede), separe por virgula, sem espacos.",
+    "   Se usar mais de um link (localhost + Vercel + IP na rede), separe por virgula, sem espacos.",
     "4) No Render → Logs: veja se o servico sobe sem erro (Firebase, JWT_SECRET, etc.)."
   ].join("\n");
 }
@@ -91,7 +92,7 @@ function getNetworkErrorMessage() {
   const lines = [
     `Nao foi possivel conectar a API (${API_BASE}).`,
     "",
-    "Site publicado (ex.: Netlify): em Variaveis de ambiente / Build, defina VITE_API_URL com a URL https da sua API terminando em /api. Salve, faca um novo deploy do frontend.",
+    "Site publicado (ex.: Vercel): defina VERCEL_BACKEND_URL (URL do backend sem /api) no Edge ou VITE_API_URL=https://.../api no build. Redeploy apos mudar env. Com VITE absoluto, na API use FRONTEND_URL = origem exata deste site.",
     "No servidor da API: defina FRONTEND_URL com a URL exata do site (sem barra no final) para o CORS liberar o navegador."
   ];
 
@@ -154,7 +155,7 @@ function getLoginFallbackMessage(err) {
   return (
     "Nao foi possivel entrar." +
     tail +
-    "\n\nSe o site e o Netlify: confira VITE_API_URL no build e FRONTEND_URL na Render (origem exata, sem / no fim). Teste a API: " +
+    "\n\nSe o site e a Vercel: VERCEL_BACKEND_URL (Edge) ou VITE_API_URL no build; com chamadas diretas confira FRONTEND_URL na API. Teste: " +
     API_BASE.replace(/\/$/, "") +
     "/health"
   );
@@ -212,18 +213,29 @@ export default function Login() {
           <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
             <p className="font-bold">O site online nao esta apontando para a API publica.</p>
             <p className="mt-2 text-amber-900/95">
-              No <strong>Netlify</strong> (Site configuration → Environment variables), crie{" "}
-              <code className="rounded bg-white/80 px-1">VITE_API_URL</code> com a URL{" "}
-              <strong>https</strong> do seu backend, terminando em <strong>/api</strong>, por exemplo{" "}
-              <code className="rounded bg-white/80 px-1">https://seu-app.onrender.com/api</code>. Depois:{" "}
-              <strong>Deploys → Trigger deploy → Clear cache and deploy site</strong>.
+              Na <strong>Vercel</strong> (Project → Settings → Environment Variables), use <strong>uma</strong> das
+              opcoes e depois faca um <strong>novo deploy</strong> (variaveis de build precisam de rebuild):
             </p>
-            <p className="mt-2">
-              No <strong>servidor da API</strong> (Render, Railway, etc.), defina{" "}
-              <code className="rounded bg-white/80 px-1">FRONTEND_URL</code> exatamente como:{" "}
-              <code className="rounded bg-white/80 px-1">https://loja-maricota-32c1db.netlify.app</code>{" "}
-              (sem barra no final), para o CORS aceitar este site.
-            </p>
+            <ul className="mt-2 list-inside list-disc space-y-1 text-amber-900/95">
+              <li>
+                <code className="rounded bg-white/80 px-1">VERCEL_BACKEND_URL</code> = URL do backend{" "}
+                <strong>sem</strong> <code className="rounded bg-white/80 px-1">/api</code>, ex.{" "}
+                <code className="rounded bg-white/80 px-1">https://seu-app.onrender.com</code> — disponivel no{" "}
+                <strong>Edge Middleware</strong>; o site encaminha <code className="rounded bg-white/80 px-1">/api</code>{" "}
+                para a API (nao precisa de <code className="rounded bg-white/80 px-1">VITE_API_URL</code> nem CORS para
+                esse caminho).
+              </li>
+              <li>
+                Ou <code className="rounded bg-white/80 px-1">VITE_API_URL</code> ={" "}
+                <code className="rounded bg-white/80 px-1">https://seu-app.onrender.com/api</code> — chamadas diretas;
+                ao servidor da API defina <code className="rounded bg-white/80 px-1">FRONTEND_URL</code> como esta
+                origem (sem barra no final), ex.{" "}
+                <code className="rounded bg-white/80 px-1">
+                  {typeof window !== "undefined" ? window.location.origin : "https://seu-projeto.vercel.app"}
+                </code>
+                .
+              </li>
+            </ul>
           </div>
         )}
 

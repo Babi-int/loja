@@ -7,7 +7,9 @@
     "dev:backend": "npm run dev --prefix backend",
     "dev": "concurrently -k -n api,web -c magenta,cyan \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:web-only": "npm run dev:frontend",
-    "install:all": "npm install --prefix frontend && npm install --prefix backend"
+    "build": "npm run build --prefix frontend",
+    "install:all": "npm install --prefix frontend && npm install --prefix backend",
+    "share": "node scripts/share-access.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

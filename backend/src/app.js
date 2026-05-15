@@ -29,6 +29,56 @@ function isLocalDevBrowserOrigin(origin) {
   );
 }
 
+/** Extrai hostname se for IPv4 (valido como string). */
+function parseIPv4Host(hostname) {
+  const parts = hostname.split(".");
+  if (parts.length !== 4) return null;
+  const nums = parts.map((p) => Number(p));
+  if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+  return parts.join(".");
+}
+
+/** LAN tipica para liberar troca de porta do Vite (mesmo IP nas entradas do .env). */
+function isPrivateLanIPv4(hostname) {
+  const ip = parseIPv4Host(hostname);
+  if (!ip) return false;
+  const [aStr, bStr] = hostname.split(".");
+  const a = Number(aStr);
+  const b = Number(bStr);
+  if (a === 10) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  return false;
+}
+
+/** Hosts IPv4 privados mencionados em FRONTEND_URL (qualquer porta do painel casa). */
+function privateLanIpv4HostsFromWhitelist(list) {
+  const hosts = new Set();
+  for (const entry of list) {
+    try {
+      const h = new URL(entry).hostname;
+      if (isPrivateLanIPv4(h)) hosts.add(h);
+    } catch {
+      /* entradas invalidas ignoradas */
+    }
+  }
+  return hosts;
+}
+
+function originIpv4(hostname) {
+  return parseIPv4Host(hostname || "");
+}
+
+function matchesPrivateLanWhitelist(origin, lanHosts) {
+  if (lanHosts.size === 0) return false;
+  try {
+    const h = new URL(origin).hostname;
+    return lanHosts.has(originIpv4(h) || "");
+  } catch {
+    return false;
+  }
+}
+
 /** Uma origem ou varias separadas por virgula (ex.: localhost + IP na rede para o mesmo front). */
 function resolveCorsOrigin() {
   const raw = process.env.FRONTEND_URL;
@@ -36,11 +86,18 @@ function resolveCorsOrigin() {
   const list = raw.split(",").map((s) => s.trim()).filter(Boolean);
   if (list.length === 0) return true;
 
-  if (list.some(looksLikeLocalDevEntry)) {
+  const privateLanIpv4Whitelist = privateLanIpv4HostsFromWhitelist(list);
+  const useFlexibleDevCors =
+    list.some(looksLikeLocalDevEntry) || privateLanIpv4Whitelist.size > 0;
+
+  if (useFlexibleDevCors) {
     return (origin, callback) => {
       if (!origin) return callback(null, true);
       if (isLocalDevBrowserOrigin(origin)) return callback(null, true);
       if (list.includes(origin)) return callback(null, true);
+      if (matchesPrivateLanWhitelist(origin, privateLanIpv4Whitelist)) {
+        return callback(null, true);
+      }
       return callback(null, false);
     };
   }

@@ -67,19 +67,24 @@ O frontend abre em `http://localhost:5173` e a API roda em `http://localhost:333
 4. **Firewall do Windows**: permita entrada nas portas **3333** (API) e **5173** (Vite), ou a porta que o Vite mostrar no terminal.
 5. Na outra maquina, abra `http://192.168.0.15:5173` (troque pelo seu IP). Crie usuarios em **Configuracoes** e compartilhe e-mail e senha.
 
+**Link pronto:** com `npm run dev` rodando neste PC, na raiz execute `npm run share` — o script lista seu IPv4 na LAN, o URL do painel para colar na outra maquina e texto pronto para `FRONTEND_URL` / `VITE_API_URL`. Se o Vite nao estiver na 5173, no PowerShell use `$env:SHARE_PANEL_PORT="5174"; npm run share` (troque pela porta que o terminal do Vite mostrar).
+
+Isso serve para **notebook** pelo **navegador** (Chrome, Edge, etc.). Nao e APK de Android; para celular como app instalavel seria outro projeto (ex.: Capacitor / PWA).
+
 A API ja escuta em `0.0.0.0` por padrao (`HOST` no `.env` do backend; use `127.0.0.1` apenas se quiser bloquear acesso pela rede).
 
-### Site no Netlify (frontend) + API na internet
-
-Exemplo de frontend: `https://loja-maricota-32c1db.netlify.app`
+### Site na Vercel (frontend) + API na internet
 
 1. **Hospede o backend** em algum servico com HTTPS (Render, Railway, Fly.io, etc.) e obtenha a URL publica da API (ex.: `https://maricota-api.onrender.com`).
-2. **Netlify** → seu site → **Site configuration** → **Environment variables**: adicione `VITE_API_URL` = `https://SUA-API-DOMINIO.com/api` (obrigatorio terminar em `/api`).
-3. Faca **Deploys** → **Trigger deploy** → **Clear cache and deploy site** (variaveis `VITE_*` entram no build).
-4. No `.env` (ou painel) do **backend**: `FRONTEND_URL=https://loja-maricota-32c1db.netlify.app` (sem `/` no final). Se precisar de mais de uma origem, separe por virgula.
-5. Firebase e demais variaveis do backend devem estar configurados no host da API.
+2. Na **Vercel** → projeto → **Settings** → **Environment Variables**, escolha **uma** estrategia:
+   - **Proxy (recomendado para menos dor com CORS):** `VERCEL_BACKEND_URL` = `https://SUA-API-DOMINIO.com` (sem `/api`). Ative para **Production** e **Preview** e garanta que a variavel esteja disponivel para **Edge Middleware**. Faca um novo deploy. O frontend em producao pode usar caminho relativo `/api` (sem definir `VITE_API_URL` no build).
+   - **Chamadas diretas do navegador:** `VITE_API_URL` = `https://SUA-API-DOMINIO.com/api` (obrigatorio terminar em `/api`). Refaca o deploy para o valor entrar no bundle (`VITE_*` e fixo no build).
+3. No `.env` (ou painel) do **backend**: `FRONTEND_URL=https://seu-projeto.vercel.app` (sem `/` no final). Se precisar de mais de uma origem, separe por virgula.
+4. Firebase e demais variaveis do backend devem estar configurados no host da API.
 
-Se `VITE_API_URL` nao existir no build do Netlify, o app tenta `localhost:3333` e o login falha para todo mundo que acessa pelo link publico.
+Na raiz do repositorio existem `vercel.json` (build em `frontend/` e SPA fallback) e `middleware.js` (proxy `/api` quando `VERCEL_BACKEND_URL` esta definido). Ao conectar o Git na Vercel, use **Root Directory** na raiz do repo (onde esta o `vercel.json`), nao so a pasta `frontend`.
+
+Se nem `VITE_API_URL` no build nem `VERCEL_BACKEND_URL` na Vercel estiverem corretos, o login no site publico falha.
 
 ## Hospedagem sugerida
 
